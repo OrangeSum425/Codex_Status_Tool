@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Codex Monitor</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell" aria-label="Codex monitor panel">
+      <section class="panel">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Codex Monitor</p>
+            <h1>Live Limits</h1>
+          </div>
+          <button class="icon-button" id="refreshButton" title="Refresh estimate">R</button>
+        </header>
+
+        <section class="hero-gauge" aria-label="5 hour limit">
+          <div class="dial" style="--value: 0.68">
+            <div class="dial-inner">
+              <span class="dial-label">5h</span>
+              <strong id="fiveHourPercent">68%</strong>
+              <span id="fiveHourStatus">Ready</span>
+            </div>
+          </div>
+          <div class="gauge-copy">
+            <p>Next reset</p>
+            <strong id="resetCountdown">01:18:23</strong>
+            <span>Based on the current window.</span>
+          </div>
+        </section>
+
+        <section class="metrics" aria-label="Limit overview">
+          <article class="metric">
+            <div class="mini-ring" style="--value: 0.63">
+              <span>63%</span>
+            </div>
+            <div>
+              <p>Weekly</p>
+              <strong>63% left</strong>
+            </div>
+          </article>
+          <article class="metric">
+            <div class="spark">
+              <i style="height: 28%"></i>
+              <i style="height: 56%"></i>
+              <i style="height: 44%"></i>
+              <i style="height: 72%"></i>
+              <i style="height: 38%"></i>
+            </div>
+            <div>
+              <p>Recent use</p>
+              <strong>Medium</strong>
+            </div>
+          </article>
+        </section>
+      </section>
+    </main>
+    <script src="./script.js"></script>
+  </body>
+</html>
