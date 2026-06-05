@@ -134,107 +134,69 @@ function Get-Accent {
     return "#7BE495"
 }
 
-function Set-Arc {
-    param(
-        [System.Windows.Shapes.Path]$Path,
-        [double]$Percent,
-        [double]$CenterX,
-        [double]$CenterY,
-        [double]$Radius,
-        [string]$Color
-    )
-
-    if ($Percent -le 0) {
-        $Path.Data = $null
-        return
-    }
-
-    $Percent = [Math]::Max(0.001, [Math]::Min(0.999, $Percent))
-    $angle = 360 * $Percent - 90
-    $radians = [Math]::PI * $angle / 180
-    $start = [System.Windows.Point]::new($CenterX, $CenterY - $Radius)
-    $end = [System.Windows.Point]::new(
-        $CenterX + $Radius * [Math]::Cos($radians),
-        $CenterY + $Radius * [Math]::Sin($radians)
-    )
-
-    $segment = [System.Windows.Media.ArcSegment]::new()
-    $segment.Point = $end
-    $segment.Size = [System.Windows.Size]::new($Radius, $Radius)
-    $segment.SweepDirection = [System.Windows.Media.SweepDirection]::Clockwise
-    $segment.IsLargeArc = $Percent -gt 0.5
-
-    $figure = [System.Windows.Media.PathFigure]::new()
-    $figure.StartPoint = $start
-    $figure.Segments.Add($segment)
-
-    $geometry = [System.Windows.Media.PathGeometry]::new()
-    $geometry.Figures.Add($figure)
-
-    $Path.Data = $geometry
-    $Path.Stroke = [System.Windows.Media.BrushConverter]::new().ConvertFromString($Color)
-}
-
 $Xaml = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Width="292" Height="150" WindowStyle="None" ResizeMode="NoResize"
+        Width="300" Height="132" WindowStyle="None" ResizeMode="NoResize"
         AllowsTransparency="True" Background="Transparent" Topmost="True"
         ShowInTaskbar="False" FontFamily="Microsoft YaHei UI">
   <Window.Resources>
     <DropShadowEffect x:Key="PanelShadow" BlurRadius="24" ShadowDepth="8" Opacity="0.32"/>
   </Window.Resources>
   <Border CornerRadius="16" Background="#111823" BorderBrush="#344154" BorderThickness="1" Effect="{StaticResource PanelShadow}" SnapsToDevicePixels="True">
-    <Grid Margin="12">
+    <Grid Margin="12,10,12,10">
       <Grid.RowDefinitions>
-        <RowDefinition Height="22"/>
+        <RowDefinition Height="18"/>
         <RowDefinition Height="*"/>
-        <RowDefinition Height="22"/>
       </Grid.RowDefinitions>
 
       <Grid Grid.Row="0" Name="DragArea">
-        <TextBlock Text="CODEX MONITOR" Foreground="#91A0B5" FontSize="10" FontWeight="Bold" VerticalAlignment="Top"/>
+        <TextBlock Text="CODEX" Foreground="#91A0B5" FontSize="10" FontWeight="Bold" VerticalAlignment="Top"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
-          <Button Name="CloseButton" Content="X" Width="24" Height="24" FontSize="11" FontWeight="Bold"
+          <Button Name="CloseButton" Content="X" Width="20" Height="20" FontSize="10" FontWeight="Bold"
                   Foreground="#EEF4FF" Background="#202938" BorderBrush="#344154"/>
         </StackPanel>
       </Grid>
 
-      <Grid Grid.Row="1" Margin="0,2,0,0">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="126"/>
-          <ColumnDefinition Width="12"/>
-          <ColumnDefinition Width="126"/>
-        </Grid.ColumnDefinitions>
+      <StackPanel Grid.Row="1" Margin="0,8,0,0">
+        <Grid Height="40" Margin="0,0,0,8">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="24"/>
+            <RowDefinition Height="6"/>
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="44"/>
+            <ColumnDefinition Width="58"/>
+            <ColumnDefinition/>
+          </Grid.ColumnDefinitions>
+          <TextBlock Text="5h" Foreground="#91A0B5" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+          <TextBlock Name="FivePercentText" Grid.Column="1" Foreground="#EEF4FF" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+          <TextBlock Name="FiveResetText" Grid.Column="2" Foreground="#AAB6C7" FontSize="11" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+          <Grid Grid.Row="1" Grid.ColumnSpan="3" Height="5" VerticalAlignment="Bottom">
+            <Border Background="#2F3A4C" CornerRadius="3"/>
+            <Border Name="FiveBar" Background="#7BE495" CornerRadius="3" HorizontalAlignment="Left" Width="0"/>
+          </Grid>
+        </Grid>
 
-        <Canvas Grid.Column="0" Width="86" Height="86" HorizontalAlignment="Center" VerticalAlignment="Center">
-          <Ellipse Width="76" Height="76" Canvas.Left="5" Canvas.Top="5" Stroke="#2F3A4C" StrokeThickness="8"/>
-          <Path Name="FiveArc" StrokeThickness="8" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-          <Ellipse Width="52" Height="52" Canvas.Left="17" Canvas.Top="17" Fill="#0B1018" Stroke="#273345"/>
-          <TextBlock Text="5h" Canvas.Left="36" Canvas.Top="24" Foreground="#91A0B5" FontSize="10"/>
-          <TextBlock Name="FivePercentText" Canvas.Left="24" Canvas.Top="39" Foreground="#EEF4FF" FontSize="20" FontWeight="Bold"/>
-        </Canvas>
-
-        <Canvas Grid.Column="2" Width="86" Height="86" HorizontalAlignment="Center" VerticalAlignment="Center">
-          <Ellipse Width="76" Height="76" Canvas.Left="5" Canvas.Top="5" Stroke="#2F3A4C" StrokeThickness="8"/>
-          <Path Name="WeeklyArc" StrokeThickness="8" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-          <Ellipse Width="52" Height="52" Canvas.Left="17" Canvas.Top="17" Fill="#0B1018" Stroke="#273345"/>
-          <TextBlock Text="Week" Canvas.Left="29" Canvas.Top="24" Foreground="#91A0B5" FontSize="10"/>
-          <TextBlock Name="WeeklyPercentText" Canvas.Left="24" Canvas.Top="39" Foreground="#EEF4FF" FontSize="20" FontWeight="Bold"/>
-        </Canvas>
-      </Grid>
-
-      <Grid Grid.Row="2">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="126"/>
-          <ColumnDefinition Width="12"/>
-          <ColumnDefinition Width="126"/>
-        </Grid.ColumnDefinitions>
-        <TextBlock Name="FiveResetText" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                   Foreground="#91A0B5" FontSize="10" FontWeight="Bold"/>
-        <TextBlock Name="WeeklyResetText" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                   Foreground="#91A0B5" FontSize="10" FontWeight="Bold"/>
-      </Grid>
+        <Grid Height="40">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="24"/>
+            <RowDefinition Height="6"/>
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="44"/>
+            <ColumnDefinition Width="58"/>
+            <ColumnDefinition/>
+          </Grid.ColumnDefinitions>
+          <TextBlock Text="Week" Foreground="#91A0B5" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+          <TextBlock Name="WeeklyPercentText" Grid.Column="1" Foreground="#EEF4FF" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+          <TextBlock Name="WeeklyResetText" Grid.Column="2" Foreground="#AAB6C7" FontSize="11" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+          <Grid Grid.Row="1" Grid.ColumnSpan="3" Height="5" VerticalAlignment="Bottom">
+            <Border Background="#2F3A4C" CornerRadius="3"/>
+            <Border Name="WeeklyBar" Background="#7BE495" CornerRadius="3" HorizontalAlignment="Left" Width="0"/>
+          </Grid>
+        </Grid>
+      </StackPanel>
     </Grid>
   </Border>
 </Window>
@@ -261,20 +223,20 @@ function Render {
     (Find-Control "FivePercentText").Text = if ($five -lt 0) { "--" } else { "$five%" }
     (Find-Control "WeeklyPercentText").Text = if ($weekly -lt 0) { "--" } else { "$weekly%" }
     if ([int]$State.reset_seconds -lt 0) {
-        (Find-Control "FiveResetText").Text = "5h reset: --"
+        (Find-Control "FiveResetText").Text = "reset --"
     } else {
-        (Find-Control "FiveResetText").Text = "5h reset: " + (Format-Countdown ([int]$State.reset_seconds))
+        (Find-Control "FiveResetText").Text = "reset " + (Format-Countdown ([int]$State.reset_seconds))
     }
     $weeklyReset = [string]$State.weekly_reset
     if ([string]::IsNullOrWhiteSpace($weeklyReset) -or $weeklyReset -eq "n/a") {
         $weeklyReset = "--"
     }
-    (Find-Control "WeeklyResetText").Text = "Week reset: " + $weeklyReset
+    (Find-Control "WeeklyResetText").Text = "reset " + $weeklyReset
 
-    $fiveRatio = if ($five -lt 0) { 0 } else { $five / 100 }
-    $weeklyRatio = if ($weekly -lt 0) { 0 } else { $weekly / 100 }
-    Set-Arc (Find-Control "FiveArc") $fiveRatio 43 43 38 $accent
-    Set-Arc (Find-Control "WeeklyArc") $weeklyRatio 43 43 38 "#7BE495"
+    $barWidth = 276
+    (Find-Control "FiveBar").Width = if ($five -lt 0) { 0 } else { [Math]::Round($barWidth * $five / 100) }
+    (Find-Control "WeeklyBar").Width = if ($weekly -lt 0) { 0 } else { [Math]::Round($barWidth * $weekly / 100) }
+    (Find-Control "FiveBar").Background = $BrushConverter.ConvertFromString($accent)
 }
 
 function Show-UpdateDialog {
