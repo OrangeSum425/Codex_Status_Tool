@@ -76,6 +76,28 @@ fail_mask, bad_id, bad_timestamp, bad_E, bad_x, bad_y, bad_z, bad_d...
 
 具体取哪几列、输出什么格式，以 `split_run_timestamps.py` 的实际实现为准——读脚本后对齐。
 
+#### ⚠️ 必须按 timestamp 去重（多重度！）
+
+因为研究的是**多重度（multiplicity）**，csv 里一个 prompt 可能配到多个 delayed，于是
+**同一个物理事件会在多行里重复出现**。例如：
+
+```
+phase1,9875,1986848,1986850,1756952791.568536440,1756952791.568717816,...
+phase1,9875,1986848,1986851,1756952791.568536440,1756952791.568855672,...
+```
+
+这两行是同一个 prompt（`p_id=1986848`、`p_timestamp` 完全相同）配了两个不同的 delayed。
+如果直接逐行取时间戳，prompt 会被重复计入。
+
+**所以切分时必须按 timestamp 去重，得到唯一的 prompt / delayed 事件集合：**
+- prompt 集合：对 `p_timestamp` 去重（同一个 run 内）
+- delayed 集合：对 `d_timestamp` 去重
+- 用 timestamp 作为唯一性判据来确认"这是不是同一个 prompt / 同一个 delayed"
+- 最终给 time2index 的，应是每个 run 下去重后的唯一事件时间戳
+
+读 `split_run_timestamps.py` 时确认它是否已经做了这步去重；如果没有，切分前要自己先去重，
+不能把带重复的逐行时间戳直接喂进去。
+
 （历史上还有一个 txt 来源 `selected_data_info_E12_30.txt`，现已弃用，不要再用。）
 
 ### 操作
