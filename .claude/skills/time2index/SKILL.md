@@ -33,7 +33,45 @@ export TIME2INDEX_WORKER_RUNTIME_SETUP=1
 
 `TIME2INDEX_EDM_LIST` 和其余行通常保持不变（除非用户明确要求修改）。
 
-## 执行步骤
+## 完整流程概览
+
+1. **步骤 0（数据准备）**：把一个汇总 csv/txt 按 run 切成一个个可读的 per-run timestamp
+   txt 文件 → 这些文件就是 time2index 的输入（即 `TIME2INDEX_TIMESTAMPS_BASE_DIR` 指向的目录）。
+2. **步骤 1–5（提交 time2index）**：改 env.sh、source、提交作业。
+
+如果用户只说"执行 time2index"且 timestamp 文件已经切好，可以直接从步骤 1 开始；
+如果用户要从头跑（包括切分），先做步骤 0。拿不准时问一句。
+
+## 步骤 0：切分 per-run timestamp 文件
+
+参考脚本：
+`/scratchfs/juno/yaoqicao/GenCalibPDF/gen-calib-pdf/share/time2index/split_run_timestamps.py`
+
+**先读这个脚本**确认它的命令行参数（输入文件、输出目录、列名等）——不要凭记忆假设参数。
+
+### 输入数据来源（两种，需在集群上确认用哪个）
+
+- **历史/旧来源（txt）**：
+  `/scratchfs/juno/yaoqicao/DSNB_analysis/DSNB_Selection/Output/Multi_check/selected_prompt_summary/selected_data_info_E12_30.txt`
+  - ⚠️ **必须确认**：检查
+    `/scratchfs/juno/yaoqicao/DSNB_analysis/DSNB_Selection/Srcipts/multi_check.py`
+    （注意目录拼写是 `Srcipts`）的输出是否还包含这个 `selected_data_info_E12_30.txt`。
+    如果 multi_check.py 已经不再产出它，就不要用这个 txt，改用下面的最终 csv。
+
+- **最终来源（csv，当前主用）**：
+  `/lustrefs/juno26/users/yaoqicao/ReProd26B_Selection/Dataset/ibd_summary_by_phase/merged/`
+  目录下，**文件名在 12–100 区间、且名字里带 `multi` 的那个 csv**。
+  - 用之前**先看 header**（`head -1` 或读前几行）确认列名，再据此设置
+    split_run_timestamps.py 的列参数。**列名/格式未经确认前不要硬编码。**
+
+### 操作
+
+1. 在 lxlogin 上确认上面两点（multi_check.py 是否还出 tx, 以及目标 csv 的 header）。
+2. 读 `split_run_timestamps.py`，按其参数把选定的 csv/txt 切成 per-run txt，
+   输出目录应与步骤 1 里要填的 `TIME2INDEX_TIMESTAMPS_BASE_DIR` 一致。
+3. 抽查输出：切出了多少个 run 文件、抽一个文件看格式是否正确，再进入步骤 1。
+
+## 执行步骤（提交 time2index）
 
 ### 1. 必须先询问两个路径
 
@@ -78,3 +116,5 @@ bash /scratchfs/juno/yaoqicao/GenCalibPDF/gen-calib-pdf/share/time2index/submit/
   lxlogin 上运行，不要假装成功。
 - 只改用户要求改的东西。除非明确要求，否则不要动 `TIME2INDEX_EDM_LIST`、`source setup.sh`
   或那两个 `RUNTIME_SETUP` 变量。
+- 步骤 0 的两个数据来源会随项目演进变化：每次跑都重新确认 multi_check.py 的输出、以及
+  目标 csv 的真实 header，不要沿用本文里记的旧路径/旧列名当成事实。
