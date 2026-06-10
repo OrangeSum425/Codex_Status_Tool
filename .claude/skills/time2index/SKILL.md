@@ -57,6 +57,25 @@ export TIME2INDEX_WORKER_RUNTIME_SETUP=1
 用之前**先看 header**（`head -1` 或读前几行）确认列名，再据此设置 split_run_timestamps.py
 的列参数。**列名/格式未经确认前不要硬编码。**
 
+#### 已知列结构（2026-06 观察，可能随项目变化，仍需现场 `head -1` 复核）
+
+```
+phase, runid, p_id, d_id, p_timestamp, d_timestamp,
+Ep, px, py, pz, Ed, dx, dy, dz,
+pair_dt_us, pair_dr,
+fail_mask, bad_id, bad_timestamp, bad_E, bad_x, bad_y, bad_z, bad_d...
+```
+（header 末尾在展示时被截断，`bad_d...` 之后可能还有列。）
+
+对切分最关键的列：
+- `runid` — 按它分组，每个 run 一个 txt 文件
+- `p_timestamp` / `d_timestamp` — prompt / delayed 时间戳，单位秒、带纳秒小数
+  （如 `1756952791.568536440`）；切分输出的就是这些时间戳
+- `p_id` / `d_id` — prompt / delayed 事件号
+- `phase` — 取值如 `phase1`，可能用于分目录或筛选
+
+具体取哪几列、输出什么格式，以 `split_run_timestamps.py` 的实际实现为准——读脚本后对齐。
+
 （历史上还有一个 txt 来源 `selected_data_info_E12_30.txt`，现已弃用，不要再用。）
 
 ### 操作
